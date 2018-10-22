@@ -68,7 +68,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             let location = touch.location(in: self)
-            let ball = SKSpriteNode(imageNamed: "ballRed")
+            let ballColour = ["ballGrey", "ballBlue", "ballPurple", "ballRed", "ballCyan", "ballYellow", "ballGreen"]
+            let ball = SKSpriteNode(imageNamed: ballColour[Int.random(in: 0 ..< ballColour.count)])
 
             let objects = nodes(at: location)
             
@@ -76,21 +77,32 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 editingMode = !editingMode
             } else {
                 if editingMode {
-                    let size = CGSize(width: GKRandomDistribution(lowestValue: 16, highestValue: 128).nextInt(), height: 16)
-                    let box = SKSpriteNode(color: RandomColor(), size: size)
-                    box.zRotation = RandomCGFloat(min: 0, max: 3)
-                    box.position = location
-                    
-                    box.physicsBody = SKPhysicsBody(rectangleOf: box.size)
-                    box.physicsBody?.isDynamic = false
-                    
-                    addChild(box)                } else {
+                    var touchedBox = false
+                        enumerateChildNodes(withName: "box") {(node, _) in
+                            if(node.contains(touch.location(in: self))){
+                                print("touching node!")
+                                node.removeFromParent()
+                                touchedBox = true
+                            }
+                        }
+                    if touchedBox == false{
+                        let size = CGSize(width: GKRandomDistribution(lowestValue: 16, highestValue: 128).nextInt(), height: 16)
+                        let box = SKSpriteNode(color: RandomColor(), size: size)
+                        box.name = "box"
+                        box.zRotation = RandomCGFloat(min: 0, max: 3)
+                        box.position = location
+                        
+                        box.physicsBody = SKPhysicsBody(rectangleOf: box.size)
+                        box.physicsBody?.isDynamic = false
+                        addChild(box)
+                    }
+                } else {
                     // create a ball
                     ball.name = "ball"
                     ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width / 2.0)
                     ball.physicsBody?.restitution = 0.4
                     ball.physicsBody!.contactTestBitMask = ball.physicsBody!.collisionBitMask
-                    ball.position = location
+                    ball.position = CGPoint(x: location.x, y: 650)
                     addChild(ball)
                 }
             }
