@@ -1,0 +1,8 @@
+version: "Apple Swift version 4.2 (swiftlang-1000.11.37.1 clang-1000.11.45.1)"
+options: "f5d648af3608ae9e494dd60aff234ad6"
+build_time: [1540237075, 41770000]
+inputs:
+  "/Users/bOsowski/Documents/college/Peggle/Peggle/GameScene.swift": [1540237073, 0]
+  "/Users/bOsowski/Documents/college/Peggle/Peggle/GameViewController.swift": [1540229502, 0]
+  "/Users/bOsowski/Documents/college/Peggle/Peggle/AppDelegate.swift": [1540229502, 0]
+  "/Users/bOsowski/Documents/college/Peggle/Peggle/Helper.swift": [1540237054, 0]
