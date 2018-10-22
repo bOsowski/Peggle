@@ -5,12 +5,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var scoreLabel: SKLabelNode!
     var editLabel: SKLabelNode!
+    var ballsLabel: SKLabelNode!
+    var ballInfo = [SKNode:Ball]()
+    var amountOfBalls = 5 {
+        didSet{
+            ballsLabel.text = "Balls: \(amountOfBalls)"
+        }
+    }
 
     var score = 0 {
         didSet {
             scoreLabel.text = "Score: \(score)"
         }
     }
+    
+
     
     var editingMode: Bool = false {
         didSet {
@@ -63,14 +72,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         editLabel.text = "Edit"
         editLabel.position = CGPoint(x: 80, y: 700)
         addChild(editLabel)
+        
+        ballsLabel = SKLabelNode(fontNamed: "Chalkduster")
+        ballsLabel.text = "Balls: \(amountOfBalls)"
+        ballsLabel.position = CGPoint(x: 240, y: 700)
+        addChild(ballsLabel)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             let location = touch.location(in: self)
-            let ballColour = ["ballGrey", "ballBlue", "ballPurple", "ballRed", "ballCyan", "ballYellow", "ballGreen"]
-            let ball = SKSpriteNode(imageNamed: ballColour[Int.random(in: 0 ..< ballColour.count)])
-
             let objects = nodes(at: location)
             
             if objects.contains(editLabel) {
@@ -96,18 +107,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         box.physicsBody?.isDynamic = false
                         addChild(box)
                     }
-                } else {
+                } else if(amountOfBalls > 0){
                     // create a ball
+                    let ballColour = ["ballGrey", "ballBlue", "ballPurple", "ballRed", "ballCyan", "ballYellow", "ballGreen"]
+                    let pickedColour = ballColour[Int.random(in: 0 ..< ballColour.count)]
+                    let ball = SKSpriteNode(imageNamed: pickedColour)
+
                     ball.name = "ball"
                     ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.size.width / 2.0)
                     ball.physicsBody?.restitution = 0.4
                     ball.physicsBody!.contactTestBitMask = ball.physicsBody!.collisionBitMask
                     ball.position = CGPoint(x: location.x, y: 650)
+                    ballInfo[ball] = Ball(colour: pickedColour)
                     addChild(ball)
+                    amountOfBalls -= 1
                 }
             }
         }
     }
+
     
     func makeSlot(at position: CGPoint, isGood: Bool) {
         var slotBase: SKSpriteNode
@@ -141,16 +159,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         bouncer.position = position
         bouncer.physicsBody = SKPhysicsBody(circleOfRadius: bouncer.size.width / 2.0)
         bouncer.physicsBody?.isDynamic = false
+        bouncer.name = "bouncer"
         addChild(bouncer)
     }
     
     func collisionBetween(ball: SKNode, object: SKNode) {
         if object.name == "good" {
+            score += (ballInfo[ball]?.boxHits)!
+            ballInfo[ball] = nil
             destroy(ball: ball)
-            score += 1
+            amountOfBalls += 1
         } else if object.name == "bad" {
-            destroy(ball: ball)
             score -= 1
+            ballInfo[ball] = nil
+            destroy(ball: ball)
+        } else if object.name == "box" {
+            ballInfo[ball]?.boxHits += 1
+            object.removeFromParent()
+        } else if object.name == "bouncer" {
+            print("collided with bouncer")
+            ballInfo[ball]?.bouncerHits.insert(object)
+            if (ballInfo[ball]?.bouncerHits.count)! > 1{
+                print("collided with 2 different bouncers. teleporting.")
+                ball.run(SKAction.move(to:  CGPoint(x: ball.position.x, y: 650), duration: 0))
+                ballInfo[ball]?.bouncerHits.removeAll()
+            }
         }
     }
     
@@ -161,5 +194,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         ball.removeFromParent()
+    }
+    
+    class Ball{
+        var boxHits:Int
+        var bouncerHits:Set<SKNode>
+        var colour:String
+        
+        init(colour: String) {
+            self.boxHits = 0
+            self.bouncerHits = []
+            self.colour = colour
+        }
     }
 }
