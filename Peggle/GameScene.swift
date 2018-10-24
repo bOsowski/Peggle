@@ -7,6 +7,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var editLabel: SKLabelNode!
     var ballsLabel: SKLabelNode!
     var ballInfo = [SKNode:Ball]()
+    let colours = [#colorLiteral(red: 0, green: 1, blue: 0, alpha: 1):"Green", #colorLiteral(red: 1, green: 0, blue: 0, alpha: 1):"Red", #colorLiteral(red: 0.1270250192, green: 0, blue: 1, alpha: 1):"Blue", #colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1):"Grey", #colorLiteral(red: 1, green: 1, blue: 0, alpha: 1):"Yellow", #colorLiteral(red: 0, green: 1, blue: 0.626937449, alpha: 1):"Cyan", #colorLiteral(red: 1, green: 0, blue: 0.9863891006, alpha: 1):"Purple"]
     var amountOfBalls = 5 {
         didSet{
             ballsLabel.text = "Balls: \(amountOfBalls)"
@@ -98,7 +99,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         }
                     if touchedBox == false{
                         let size = CGSize(width: GKRandomDistribution(lowestValue: 16, highestValue: 128).nextInt(), height: 16)
-                        let box = SKSpriteNode(color: RandomColor(), size: size)
+                        
+                        //No linked hashmaps in swift? :(
+                        let hotFix = [0:#colorLiteral(red: 0, green: 1, blue: 0, alpha: 1), 1:#colorLiteral(red: 1, green: 0, blue: 0, alpha: 1), 2:#colorLiteral(red: 0.1270250192, green: 0, blue: 1, alpha: 1), 3:#colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1), 4:#colorLiteral(red: 1, green: 1, blue: 0, alpha: 1), 5:#colorLiteral(red: 0, green: 1, blue: 0.626937449, alpha: 1), 6:#colorLiteral(red: 1, green: 0, blue: 0.9863891006, alpha: 1)]
+                        let box = SKSpriteNode(color: hotFix[Int.random(in: 0..<hotFix.count)]!, size: size)
                         box.name = "box"
                         box.zRotation = RandomCGFloat(min: 0, max: 3)
                         box.position = location
@@ -164,7 +168,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func collisionBetween(ball: SKNode, object: SKNode) {
-        if object.name == "good" {
+        if object.name == "good" || ballInfo[ball]?.landedOnSameColouredBox{
             score += (ballInfo[ball]?.boxHits)!
             ballInfo[ball] = nil
             destroy(ball: ball)
@@ -175,11 +179,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             destroy(ball: ball)
         } else if object.name == "box" {
             ballInfo[ball]?.boxHits += 1
+            if ballInfo[ball]?.colour.range(of: colours[(object as! SKSpriteNode).color]!) != nil {
+                print("Touched same colour.")
+                ballInfo[ball]?.landedOnSameColouredBox = true
+            }
             object.removeFromParent()
         } else if object.name == "bouncer" {
             print("collided with bouncer")
             ballInfo[ball]?.bouncerHits.insert(object)
-            if (ballInfo[ball]?.bouncerHits.count)! > 1{
+            if ballInfo[ball] != nil && (ballInfo[ball]?.bouncerHits.count)! > 1{
                 print("collided with 2 different bouncers. teleporting.")
                 ball.run(SKAction.move(to:  CGPoint(x: ball.position.x, y: 650), duration: 0))
                 ballInfo[ball]?.bouncerHits.removeAll()
@@ -200,6 +208,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         var boxHits:Int
         var bouncerHits:Set<SKNode>
         var colour:String
+        var landedOnSameColouredBox = false
         
         init(colour: String) {
             self.boxHits = 0
@@ -207,4 +216,5 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.colour = colour
         }
     }
+
 }
