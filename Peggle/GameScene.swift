@@ -168,7 +168,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func collisionBetween(ball: SKNode, object: SKNode) {
-        if object.name == "good" || ballInfo[ball]?.landedOnSameColouredBox{
+        if object.name == "good" || (ballInfo[ball] != nil && (ballInfo[ball]?.landedOnSameColouredBox)!){
             score += (ballInfo[ball]?.boxHits)!
             ballInfo[ball] = nil
             destroy(ball: ball)
